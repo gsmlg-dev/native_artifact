@@ -1,0 +1,634 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:native-artifact:manifest:1",
+  "title": "NativeArtifact Manifest v1 (P0 contract)",
+  "description": "Pinned NIF bundle metadata. Schema validity alone does not establish trust, cross-reference integrity or runtime compatibility.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "package",
+    "package_version",
+    "required_features",
+    "artifacts"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "package": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "package_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    },
+    "required_features": {
+      "type": "array",
+      "maxItems": 0
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifact"
+      },
+      "minItems": 1
+    },
+    "extensions": {
+      "$ref": "#/$defs/extensions"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+(?:\\.[0-9]+){1,3}$"
+    },
+    "relative_path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)(?!.*\\/$)[^\\u0000-\\u001f\\u007f]+$"
+    },
+    "extensions": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_.-]*:[a-z][a-z0-9_.-]*$"
+      },
+      "additionalProperties": true
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "os",
+        "arch",
+        "libc",
+        "object_format",
+        "pointer_width",
+        "endianness",
+        "cpu_baseline"
+      ],
+      "properties": {
+        "os": {
+          "enum": [
+            "linux",
+            "macos"
+          ]
+        },
+        "arch": {
+          "enum": [
+            "x86_64",
+            "aarch64"
+          ]
+        },
+        "libc": {
+          "enum": [
+            "glibc",
+            "musl",
+            "none"
+          ]
+        },
+        "object_format": {
+          "enum": [
+            "elf",
+            "mach-o"
+          ]
+        },
+        "pointer_width": {
+          "const": 64
+        },
+        "endianness": {
+          "const": "little"
+        },
+        "cpu_baseline": {
+          "enum": [
+            "x86-64",
+            "armv8-a"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "os": {
+                "const": "linux"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "libc": {
+                "enum": [
+                  "glibc",
+                  "musl"
+                ]
+              },
+              "object_format": {
+                "const": "elf"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "libc": {
+                "const": "none"
+              },
+              "object_format": {
+                "const": "mach-o"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "arch": {
+                "const": "x86_64"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "cpu_baseline": {
+                "const": "x86-64"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "cpu_baseline": {
+                "const": "armv8-a"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "nif": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "major",
+        "minor"
+      ],
+      "properties": {
+        "major": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "minor": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "system_library": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "required_symbols",
+        "symbol_versions"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required_symbols": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "symbol_versions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nif",
+        "min_erts",
+        "min_os_version",
+        "min_libc_version",
+        "vm_variant",
+        "system_libraries"
+      ],
+      "properties": {
+        "nif": {
+          "$ref": "#/$defs/nif"
+        },
+        "min_erts": {
+          "$ref": "#/$defs/version"
+        },
+        "min_os_version": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/version"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "min_libc_version": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/version"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "vm_variant": {
+          "const": "beam"
+        },
+        "system_libraries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/system_library"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "module",
+        "interface_version",
+        "fingerprint"
+      ],
+      "properties": {
+        "module": {
+          "type": "string",
+          "pattern": "^(?:Elixir\\.[A-Z][A-Za-z0-9_]*(?:\\.[A-Z][A-Za-z0-9_]*)*|[a-z][A-Za-z0-9_@]*)$"
+        },
+        "interface_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "source": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "url"
+          ],
+          "properties": {
+            "type": {
+              "const": "https"
+            },
+            "url": {
+              "type": "string",
+              "pattern": "^https://[^/?#@\\s]+(?:/[^?#\\s]*)?$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "path"
+          ],
+          "properties": {
+            "type": {
+              "const": "local"
+            },
+            "path": {
+              "$ref": "#/$defs/relative_path"
+            }
+          }
+        }
+      ]
+    },
+    "archive": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filename",
+        "format",
+        "size",
+        "sha256"
+      ],
+      "properties": {
+        "filename": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*\\.tar\\.gz$"
+        },
+        "format": {
+          "const": "tar.gz"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "type",
+        "role",
+        "size",
+        "sha256",
+        "mode"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/relative_path"
+        },
+        "type": {
+          "const": "regular"
+        },
+        "role": {
+          "enum": [
+            "nif",
+            "private_library",
+            "data",
+            "license",
+            "metadata"
+          ]
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "mode": {
+          "enum": [
+            "0644",
+            "0755"
+          ]
+        }
+      }
+    },
+    "license": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "spdx",
+        "file"
+      ],
+      "properties": {
+        "spdx": {
+          "type": "string",
+          "minLength": 1
+        },
+        "file": {
+          "$ref": "#/$defs/relative_path"
+        }
+      }
+    },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_repository",
+        "source_commit",
+        "toolchains",
+        "parameters",
+        "nif_headers_version",
+        "lockfile_sha256",
+        "sysroot_sha256",
+        "container_sha256"
+      ],
+      "properties": {
+        "source_repository": {
+          "type": "string",
+          "pattern": "^https://[^/?#@\\s]+(?:/[^?#\\s]*)?$"
+        },
+        "source_commit": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "toolchains": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/toolchain"
+          },
+          "minItems": 1
+        },
+        "parameters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "nif_headers_version": {
+          "$ref": "#/$defs/nif"
+        },
+        "lockfile_sha256": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sysroot_sha256": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "container_sha256": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "native_version",
+        "build_revision",
+        "target",
+        "compatibility",
+        "binding",
+        "sources",
+        "archive",
+        "entrypoint",
+        "private_libraries",
+        "files",
+        "licenses",
+        "provenance"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_.-]*$"
+        },
+        "kind": {
+          "const": "nif"
+        },
+        "native_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "build_revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "target": {
+          "$ref": "#/$defs/target"
+        },
+        "compatibility": {
+          "$ref": "#/$defs/compatibility"
+        },
+        "binding": {
+          "$ref": "#/$defs/binding"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "archive": {
+          "$ref": "#/$defs/archive"
+        },
+        "entrypoint": {
+          "$ref": "#/$defs/relative_path"
+        },
+        "private_libraries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/relative_path"
+          },
+          "uniqueItems": true
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/file"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "licenses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/license"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "target": {
+                "properties": {
+                  "os": {
+                    "const": "linux"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "compatibility": {
+                "properties": {
+                  "min_libc_version": {
+                    "$ref": "#/$defs/version"
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "compatibility": {
+                "properties": {
+                  "min_libc_version": {
+                    "type": "null"
+                  },
+                  "min_os_version": {
+                    "$ref": "#/$defs/version"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

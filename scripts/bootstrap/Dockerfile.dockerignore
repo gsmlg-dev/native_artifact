@@ -1,0 +1,8 @@
+**
+!mix.exs
+!mix.lock
+!lib
+!lib/**
+!scripts
+!scripts/bootstrap
+!scripts/bootstrap/probe.exs

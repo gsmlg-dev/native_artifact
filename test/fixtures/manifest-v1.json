@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "package": "example_codec",
+  "package_version": "0.1.0",
+  "required_features": [],
+  "extensions": {
+    "native_artifact:example": {
+      "non_production": true,
+      "note": "Illustrative metadata only; no matching archive exists."
+    }
+  },
+  "artifacts": [
+    {
+      "id": "codec-linux-x86_64-gnu",
+      "kind": "nif",
+      "native_version": "0.1.0",
+      "build_revision": 1,
+      "target": {
+        "os": "linux",
+        "arch": "x86_64",
+        "libc": "glibc",
+        "object_format": "elf",
+        "pointer_width": 64,
+        "endianness": "little",
+        "cpu_baseline": "x86-64"
+      },
+      "compatibility": {
+        "nif": {
+          "major": 2,
+          "minor": 17
+        },
+        "min_erts": "15.0",
+        "min_os_version": null,
+        "min_libc_version": "2.28",
+        "vm_variant": "beam",
+        "system_libraries": [
+          {
+            "name": "libc.so.6",
+            "required_symbols": [],
+            "symbol_versions": [
+              "GLIBC_2.28"
+            ]
+          }
+        ]
+      },
+      "binding": {
+        "module": "Elixir.ExampleCodec.Native",
+        "interface_version": "1",
+        "fingerprint": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "sources": [
+        {
+          "type": "https",
+          "url": "https://example.invalid/releases/codec.tar.gz"
+        },
+        {
+          "type": "local",
+          "path": "native/prebuilt/codec.tar.gz"
+        }
+      ],
+      "archive": {
+        "filename": "codec--v0.1.0-r1--x86_64-linux-gnu--nif-2.17--baseline.tar.gz",
+        "format": "tar.gz",
+        "size": 1024,
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "entrypoint": "lib/codec.so",
+      "private_libraries": [
+        "lib/libcodec_helper.so"
+      ],
+      "files": [
+        {
+          "path": "lib/codec.so",
+          "type": "regular",
+          "role": "nif",
+          "size": 512,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "mode": "0644"
+        },
+        {
+          "path": "lib/libcodec_helper.so",
+          "type": "regular",
+          "role": "private_library",
+          "size": 256,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "mode": "0644"
+        },
+        {
+          "path": "LICENSE",
+          "type": "regular",
+          "role": "license",
+          "size": 64,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+          "mode": "0644"
+        }
+      ],
+      "licenses": [
+        {
+          "spdx": "MIT",
+          "file": "LICENSE"
+        }
+      ],
+      "provenance": {
+        "source_repository": "https://example.invalid/example/codec",
+        "source_commit": "0000000000000000000000000000000000000000",
+        "toolchains": [
+          {
+            "name": "clang",
+            "version": "example-only"
+          }
+        ],
+        "parameters": [
+          "-march=x86-64"
+        ],
+        "nif_headers_version": {
+          "major": 2,
+          "minor": 17
+        },
+        "lockfile_sha256": null,
+        "sysroot_sha256": null,
+        "container_sha256": null
+      }
+    }
+  ]
+}
