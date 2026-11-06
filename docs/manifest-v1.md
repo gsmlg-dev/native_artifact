@@ -3,12 +3,54 @@
 This is the P0 data contract from Agent Note
 `3e033364-8c40-403b-804a-82da575ae71a`, revision 1. The normative structural
 definition is [artifacts.schema.json](../native/artifacts.schema.json), using JSON
-Schema draft 2020-12. There is no runtime manifest parser/validator yet.
+Schema draft 2020-12. `NativeArtifact.Manifest` implements bounded structural and
+cross-reference validation of this contract.
 
 A consuming Hex package will pin `native/artifacts.json` with its wrapper source.
 Expected digests come from this trusted, fixed manifest; consumers must not fetch
 and accept new checksum metadata from the artifact server. The schema's URN is an
 identifier, not a network resource.
+
+## Runtime validation
+
+`NativeArtifact.Manifest.decode(json, opts \\ [])` accepts a UTF-8 JSON binary;
+`validate(data, opts \\ [])` accepts already-decoded, string-keyed JSON data. Both
+return `{:ok, %NativeArtifact.Manifest{data: data}}` or
+`{:error, %NativeArtifact.Error{}}`. The successful representation preserves the
+data, including descriptive extensions and numeric representations. As JSON
+Schema specifies, integer-valued numbers such as `1.0` satisfy integer fields.
+
+`decode/2` rejects duplicate object keys, including escaped spellings of the same
+key, before a last-wins map can be constructed. `validate/2` cannot recover
+duplicates already discarded by another parser; use `decode/2` for original JSON.
+Neither API reads files, runs processes, resolves hosts, fetches checksums or
+creates atoms from module names or other input. Errors identify a fixed field
+path, reason and applicable limit; they do not echo untrusted values or URLs.
+
+All limits are configurable positive integer keyword options:
+
+| Option | Default | Scope |
+| --- | --- | --- |
+| `max_manifest_bytes` | 4 MiB | Original JSON bytes and compact decoded representation |
+| `max_depth` | 64 | Nested JSON containers |
+| `max_nodes` | 100,000 | JSON values and object keys |
+| `max_artifacts` | 128 | Whole manifest |
+| `max_files` | 4,096 | Files across all artifacts |
+| `max_archive_bytes` | 256 MiB | Each declared compressed archive |
+| `max_unpacked_bytes` | 1 GiB | Declared file bytes across all artifacts |
+
+Original-byte, nesting and node bounds apply before JSON decoding. The same
+resource limits protect decoded data, including extension values. Non-JSON terms,
+invalid UTF-8, unknown options and repeated options return structured errors.
+Unsupported schema versions or required features return `unsupported_schema`;
+unsupported artifact kinds return `unsupported_artifact_kind`. Other invalid
+metadata returns `invalid_manifest`, and invalid options return
+`invalid_configuration`.
+
+The public API tests cover malformed/duplicate JSON, schema conditionals and
+types, paths and sources, identity/role cross-references, resource limits and
+atom safety. Successful validation is metadata evidence; archive-byte checking,
+safe extraction and platform loading require their own later verification.
 
 ## Root and identity
 
@@ -79,8 +121,8 @@ unlisted files and resource-limit violations **before extraction**, even when th
 archive checksum is correct. Directory entries may only be necessary parents of
 listed files; deterministic packaging normalizes their metadata.
 
-Structural schema checks cannot establish all cross-references. P1 validation must
-also enforce unique IDs/paths, exactly one NIF matching `entrypoint`, exact
+Structural schema checks cannot establish all cross-references. Runtime validation
+also enforces unique IDs/paths, exactly one NIF matching `entrypoint`, exact
 `private_libraries` membership, license file references/roles, role coverage,
 file/directory conflicts and global file-count/unpacked-size limits. All archive
 bytes and every unpacked file must match the pinned identity before installation.
