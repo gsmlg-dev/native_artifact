@@ -27,6 +27,10 @@ cleanup() {
 }
 
 command -v docker >/dev/null
+if ! docker buildx version >/dev/null 2>&1; then
+  echo "Docker Buildx is required for the isolated bootstrap build." >&2
+  exit 1
+fi
 docker info >/dev/null
 test -f "$task_root/mix.lock"
 trap cleanup EXIT
@@ -34,7 +38,7 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 
 # Honors DOCKER_HOST/DOCKER_CONTEXT; never starts a daemon or changes its context.
-docker build --progress plain --file "$task_root/scripts/bootstrap/Dockerfile" \
+docker buildx build --load --progress plain --file "$task_root/scripts/bootstrap/Dockerfile" \
   --tag "$task_image" "$task_root"
 task_image_created=true
 docker image inspect "$task_image" --format 'bootstrap_image={{.Id}}'

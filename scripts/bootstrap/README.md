@@ -1,13 +1,15 @@
 # Published HTTP closure bootstrap
 
-Run `bash scripts/bootstrap/run.sh` against a working Docker daemon with enough
-disk space for the base image and build. `DOCKER_HOST`/`DOCKER_CONTEXT` are honored;
-the script never starts a VM/daemon or changes the selected context. A remote
-daemon works without host bind mounts. Do not run this on a nearly full disk.
+Run `bash scripts/bootstrap/run.sh` with Docker Buildx and a working Docker daemon
+with enough disk space for the base image and build. `DOCKER_HOST`/`DOCKER_CONTEXT`
+are honored; the script never starts a VM/daemon or changes the selected context.
+A remote daemon works without host bind mounts. Do not run this on a nearly full
+disk.
 
 The harness uses the official, digest-pinned Elixir 1.18.4 / OTP 27 slim image.
-It removes C/C++/Rust/Zig build tools before installing Hex/rebar3 or compiling
-the repository's **actual locked published dependency closure**. Fresh dedicated
+It installs the CA trust store missing from that image and removes C/C++/Rust/Zig
+build tools before installing Hex/rebar3 or compiling the repository's **actual
+locked published dependency closure**. Fresh dedicated
 Hex, Mix, dependency and build directories prevent host caches or compiled beams
 from entering the image. A lockfile comparison rejects dependency resolution
 changes. The Dockerfile-specific ignore file excludes host `deps`, `_build` and
@@ -35,7 +37,9 @@ or stand in for `NativeArtifact.Cache`. No package-owned fallback client is used
 Updating the HTTP cohort requires deliberately updating the pinned probe object
 and reviewing the containing release, not just changing the dependency constraint.
 
-As of 2026-10-29 this harness has not completed a container run: the local Docker
-daemon was stopped and a task-only VM could not start because the host disk was
-full. Syntax checks are distinct from successful cold bootstrap. The failed
-temporary VM was removed; no shared Docker service was started.
+Verified on 2026-11-05 in a temporary Linux aarch64 Colima VM: the locked dependency
+closure compiled with Elixir 1.18.4 / OTP 27 and no native build tools. Both online
+and network-disabled offline phases returned success JSON with the pinned size
+and SHA-256, and the runner exited successfully. Its containers, object volume
+and image tag were removed. The VM's existing Buildx was used; no host plugin or
+shared Docker service was installed or started.

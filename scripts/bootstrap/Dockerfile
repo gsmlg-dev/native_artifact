@@ -9,6 +9,8 @@ ENV MIX_ENV=prod \
 # Remove native toolchains before fetching or compiling the published closure.
 # OTP's own prebuilt native runtime (including crypto/ssl) remains available.
 RUN set -eu; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates; \
     packages="$(dpkg-query -W -f='${binary:Package}\n' | \
       grep -E '^(build-essential|gcc[^[:space:]]*|g\+\+[^[:space:]]*|cpp[^[:space:]]*|clang[^[:space:]]*|llvm[^[:space:]]*|binutils[^[:space:]]*|make|cmake|ninja-build|rustc|cargo|rustup|zig|autoconf|automake|libtool)(:[^[:space:]]+)?$' | \
       grep -v -E -- '-base(:[^[:space:]]+)?$' || true)"; \
