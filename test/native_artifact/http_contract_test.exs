@@ -213,7 +213,7 @@ defmodule NativeArtifact.HTTPContractTest do
 
   @tag capture_log: true
   test "a trusted origin chain with the wrong hostname is rejected before an origin request" do
-    peer = tls_rejection_peer("wrong-origin.invalid", :handshake_failure)
+    peer = tls_rejection_peer("wrong-origin.invalid", [:handshake_failure, :bad_certificate])
 
     promise =
       fetch("https://wrong-origin.invalid/artifact",
@@ -221,9 +221,10 @@ defmodule NativeArtifact.HTTPContractTest do
         ssl: [verify: :verify_peer, cacertfile: String.to_charlist(@ca)]
       )
 
-    assert {:error, {:tls_alert, {:handshake_failure, details}}} =
+    assert {:error, {:tls_alert, {alert, details}}} =
              HTTP.Promise.await(promise, 3_000)
 
+    assert alert in [:handshake_failure, :bad_certificate]
     assert to_string(details) =~ "hostname_check_failed"
     assert_rejected_tls_completion(promise, peer)
   end
@@ -313,13 +314,15 @@ defmodule NativeArtifact.HTTPContractTest do
   end
 
   defp tls_rejection_peer(host, expected_alert) do
+    expected_alerts = List.wrap(expected_alert)
+
     Peer.start(fn socket, request ->
       assert String.starts_with?(request, "CONNECT #{host}:443 HTTP/1.1\r\n")
       :ok = :gen_tcp.send(socket, "HTTP/1.1 200 Connection Established\r\n\r\n")
 
       # An established TLS session would permit an origin GET and must fail this
       # peer assertion. Only the expected client rejection alert is accepted.
-      assert {:error, {:tls_alert, {^expected_alert, _details}}} =
+      assert {:error, {:tls_alert, {alert, _details}}} =
                :ssl.handshake(
                  socket,
                  [
@@ -330,6 +333,7 @@ defmodule NativeArtifact.HTTPContractTest do
                  2_000
                )
 
+      assert alert in expected_alerts
       :ok
     end)
   end

@@ -53,11 +53,8 @@ mix compile --warnings-as-errors
 mix test
 ```
 
-The integrated suite passes all 133 tests on Elixir 1.19.5 and 1.18.4 with OTP 28;
+The integrated suite passes all 133 tests across Elixir 1.18–1.19 and OTP 27–28;
 formatting and compilation with warnings as errors also pass. On Linux aarch64,
-Elixir 1.18.4 / OTP 27, all 120 non-HTTP tests pass with networking disabled and
-native build tools absent. The full Linux suite has one open baseline HTTP test
-assertion: hostname rejection uses a different TLS alert name on OTP 27. The same
-failure reproduces from commit `80a798f`; the test still needs a portability
-correction before that full check can pass. These checks do not certify a NIF or
-any production platform.
+Elixir 1.18.4 / OTP 27, all non-HTTP tests pass with networking disabled and
+native build tools absent, and the HTTP contract tests pass with OTP 27 and OTP 28
+TLS alert compatibility. These checks do not certify a NIF or any production platform.

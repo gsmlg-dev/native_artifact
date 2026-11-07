@@ -286,21 +286,11 @@ defmodule NativeArtifact.ManifestTest do
       assert_invalid(update_in(data, path, &(&1 ++ [hd(&1)])))
     end
 
-    assert_invalid(
-      put_in(
-        data,
-        artifact_path() ++ ["compatibility", "system_libraries", Access.at(0), "required_symbols"],
-        ["malloc", "malloc"]
-      )
-    )
+    symbols_path =
+      artifact_path() ++ ["compatibility", "system_libraries", Access.at(0), "required_symbols"]
 
-    assert_invalid(
-      put_in(
-        data,
-        artifact_path() ++ ["compatibility", "system_libraries", Access.at(0), "required_symbols"],
-        [""]
-      )
-    )
+    assert_invalid(put_in(data, symbols_path, ["malloc", "malloc"]))
+    assert_invalid(put_in(data, symbols_path, [""]))
 
     [first | _] = get_in(data, artifact_path() ++ ["files"])
     numeric_duplicate = Map.put(first, "size", first["size"] * 1.0)

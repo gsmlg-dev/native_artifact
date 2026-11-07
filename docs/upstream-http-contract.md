@@ -120,12 +120,9 @@ unconfirmed cleanup must prevent advancing to another request or mirror.
 P1 manifest validation, pure resolution/planning, safe local extraction and
 transactional installation are implemented. The complete 133-test suite passes
 on Elixir 1.19.5 and 1.18.4 with OTP 28. On Linux aarch64 / OTP 27, all 120
-non-HTTP tests pass with networking disabled. The full Linux suite reports one
-failure in the unchanged P0 hostname-rejection test: OTP 27 reports
-`bad_certificate` with `hostname_check_failed`, while the assertion expects
-OTP 28's `handshake_failure`. An independent run from baseline commit `80a798f`
-reproduces the same failure. Full Linux acceptance remains open until that test
-portability correction is made and verified; TLS verification remains enabled.
+non-HTTP tests pass with networking disabled, and the HTTP contract tests pass
+with both OTP 27 (`bad_certificate`) and OTP 28 (`handshake_failure`) TLS alert
+compatibility. TLS verification remains enabled.
 
 P2 downloads/cache and P3 language/Mix integration remain pending.
 Preserve manual redirects, raw entity bytes,
