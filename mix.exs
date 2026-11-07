@@ -8,11 +8,31 @@ defmodule NativeArtifact.MixProject do
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
-      deps: [{:http_fetch, "~> 0.21.19", runtime: false}]
+      deps: [{:http_fetch, "~> 0.21.19", runtime: false}],
+      description: "Unified precompiled NIF bundle contract for Elixir",
+      package: package()
     ]
   end
 
   def application, do: []
+
+  defp package do
+    [
+      name: "native_artifact",
+      files: [
+        "lib",
+        "native",
+        "mix.exs",
+        "README.md",
+        "LICENSE"
+      ],
+      maintainers: ["Jonathan Gao"],
+      licenses: ["MIT"],
+      links: %{
+        "GitHub" => "https://github.com/gsmlg-dev/native_artifact"
+      }
+    ]
+  end
 
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_env), do: ["lib"]
