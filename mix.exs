@@ -4,7 +4,7 @@ defmodule NativeArtifact.MixProject do
   def project do
     [
       app: :native_artifact,
-      version: "0.1.0-dev",
+      version: "0.1.0",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: elixirc_paths(Mix.env()),
